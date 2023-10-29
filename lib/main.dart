@@ -1,125 +1,238 @@
+import 'package:carbohydrate_calculator/app_state.dart';
+import 'package:carbohydrate_calculator/history_page.dart';
+import 'package:carbohydrate_calculator/import_meal_dialog.dart';
+import 'package:carbohydrate_calculator/meal_view_pages.dart';
+import 'package:carbohydrate_calculator/utils.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'data.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(const App());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class App extends StatelessWidget {
+  const App({super.key});
 
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a blue toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-      ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
-    );
+    // var appState = context.watch<AppState>();
+
+    // var initState = initAppState(appState);
+
+    return ChangeNotifierProvider(
+        create: (context) {
+          var appState = AppState();
+
+          return appState;
+        },
+        child: MaterialApp(
+          title: 'Flutter Demo',
+          theme: ThemeData(
+            colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+            useMaterial3: true,
+          ),
+          home: const MainView(),
+        ));
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
+class MainView extends StatelessWidget {
+  const MainView({super.key});
 
   // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
+  Future<int> initAppState(AppState appState) async {
+    if (!appState.initialized) {
+      await appState.initialize();
+    }
 
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
+    return 0;
+  }
 
-  final String title;
+  void onSuccessFullMealImport(
+      BuildContext context, AppState appState, Meal meal) {
+    var mealExists = appState.meals.containsKey(meal.id);
 
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
+    setMealView(Meal meal) {
+      appState.setMealEditStateNoUpdate(MealEditState.fromMeal(meal));
+      appState.viewState = ViewState.mealView;
+    }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+    if (mealExists) {
+      showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+                title: textView(
+                    "Een gerecht met hetzelfde ID bestaat al. Wil je de oude vervangen, of het nieuwe gerecht toevoegen als kopie."),
+                actions: [
+                  TextButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                      child: textView("Annuleren")),
+                  TextButton(
+                      onPressed: () {
+                        appState.saveMeal(meal);
+                        setMealView(meal);
+                        Navigator.of(context).pop();
+                      },
+                      child: textView("Vervangen")),
+                  TextButton(
+                      onPressed: () {
+                        meal.id = appState.generateNewMealId();
+                        meal.resetTimestamp();
+                        setMealView(meal);
+                        appState.saveMeal(meal);
+                        Navigator.of(context).pop();
+                      },
+                      child: textView("Als kopie")),
+                ],
+              ));
+    } else {
+      meal.resetTimestamp();
+      setMealView(meal);
+      appState.saveMeal(meal);
+    }
+  }
 
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
+  void importFailedDialog(
+      BuildContext context, AppState appState, Object exception) {
+    showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+              title: textView(
+                  "Importeren niet gelukt, er is iets mis met de gegevens."),
+              actions: [
+                TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: textView("Terug"))
+              ],
+            ));
+  }
+
+  Widget mkFloatingActionButton(BuildContext context, AppState appState) {
+    return FloatingActionButton(
+        onPressed: () {
+          showDialog(
+              context: context,
+              builder: (context) => AlertDialog(
+                    title: textView("Nieuw gerecht, of gerecht importeren?"),
+                    actions: [
+                      TextButton(
+                          onPressed: () {
+                            appState.viewState = ViewState.mealView;
+                            Navigator.of(context).pop();
+                          },
+                          child: textView("Nieuw gerecht")),
+                      TextButton(
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                            showDialog(
+                                context: context,
+                                builder: (context) => ImportMealDialog(
+                                    importFn: (meal) => onSuccessFullMealImport(
+                                        context, appState, meal),
+                                    onFail: (e) => importFailedDialog(
+                                        context, appState, e)));
+                          },
+                          child: textView("Gerecht importeren")),
+                    ],
+                  ));
+        },
+        child: const Icon(Icons.add));
+  }
+
+  Widget mainPage(BuildContext context) {
+    //TODO select view and user interaction state
+
+    var appState = context.watch<AppState>();
+
+    Widget body;
+    var floatingActionButton = mkFloatingActionButton(context, appState);
+    bool doFloatingActionButton;
+
+    switch (appState.viewState) {
+      case ViewState.historyView:
+        body = const HistoryView();
+        doFloatingActionButton = true;
+        break;
+      case ViewState.mealView:
+        body = const MealPage();
+        doFloatingActionButton = false;
+        break;
+      case ViewState.favoritesView:
+        // body = Favorite
+        doFloatingActionButton = true;
+        throw UnimplementedError();
+        break;
+      default:
+        throw UnimplementedError();
+    }
+
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        title: const Text("Hello world"),
+      ),
+      body: body,
+      floatingActionButton:
+          doFloatingActionButton ? floatingActionButton : null,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
-    return Scaffold(
-      appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
+    var appState = context.watch<AppState>();
+
+    var initState = initAppState(appState);
+
+    // var initState = () async {
+    //   await appState.clearData(notifyListeners: false);
+    //   return 0;
+    // }();
+
+    return FutureBuilder<int>(
+      future: initState,
+      builder: (BuildContext context, AsyncSnapshot<int> snapshot) {
+        List<Widget> children;
+        if (snapshot.hasData) {
+          return mainPage(context);
+        }
+
+        if (snapshot.hasError) {
+          children = <Widget>[
+            const Icon(
+              Icons.error_outline,
+              color: Colors.red,
+              size: 60,
             ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
+            Padding(
+              padding: const EdgeInsets.only(top: 16),
+              child: Text('Error: ${snapshot.error}'),
             ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+          ];
+        } else {
+          children = const <Widget>[
+            SizedBox(
+              width: 60,
+              height: 60,
+              child: CircularProgressIndicator(),
+            ),
+            Padding(
+              padding: EdgeInsets.only(top: 16),
+              child: Text('Awaiting result...'),
+            ),
+          ];
+        }
+
+        return Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: children,
+          ),
+        );
+      },
     );
   }
 }

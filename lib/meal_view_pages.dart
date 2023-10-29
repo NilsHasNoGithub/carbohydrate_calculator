@@ -58,10 +58,10 @@ class _MealPageState extends State<MealPage> {
                       children: [
                         textView(
                             part.totalChPerG() != null
-                                ? optFormatFloat(part.totalChPerG())
+                                ? optFormatFloat(part.totalChPer100G())
                                 : "?",
                             bold: true),
-                        textView("Kh./g", size: 12.0)
+                        textView("Kh./100g", size: 12.0)
                       ].map((e) => padding(child: e)).toList()))
             ],
           ),
@@ -283,6 +283,16 @@ class _MealPageState extends State<MealPage> {
         child: textView("Exporteer gerecht", textAlign: TextAlign.center));
   }
 
+  Widget calculatorButton(BuildContext context, AppState appState) {
+    return TextButton(
+        onPressed: () {
+          setState(() {
+            currentView = MealViewState.calculator;
+          });
+        },
+        child: textView("Open calculator", textAlign: TextAlign.center));
+  }
+
   Widget mealView(BuildContext context, AppState appState) {
     assert(currentMes != null);
 
@@ -385,9 +395,15 @@ class _MealPageState extends State<MealPage> {
                     child: saveMealButton(context, appState))),
           ],
         ),
-        padding(
-            child: SizedBox(
-                width: buttonWidth, child: exportButton(context, appState))),
+        Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
+          padding(
+              child: SizedBox(
+                  width: buttonWidth,
+                  child: calculatorButton(context, appState))),
+          padding(
+              child: SizedBox(
+                  width: buttonWidth, child: exportButton(context, appState))),
+        ])
       ])
     ]);
   }
@@ -439,7 +455,22 @@ class _MealPageState extends State<MealPage> {
             return false;
           },
           child: mealView(context, appState));
-    } else {
+    } else if (currentView == MealViewState.calculator) {
+      return WillPopScope(
+          onWillPop: () async {
+            setState(() {
+              currentView = MealViewState.meal;
+            });
+
+            return false;
+          },
+          child: CalculatorPage(
+            meal: currentMes!.toMeal(),
+            backFunction: () => setState(() {
+              currentView = MealViewState.meal;
+            }),
+          ));
+    } else if (currentView == MealViewState.mealPart) {
       while (mealPartViewIdx! >= currentMes!.parts.length) {
         currentMes!.parts
             .add(MealPart("", FoodContainerWeight(null, null), null, []));
@@ -473,12 +504,17 @@ class _MealPageState extends State<MealPage> {
             },
             deletePart: (part) {
               currentMes!.parts.removeAt(mealPartViewIdx!);
-              currentMes!.removeEmptyParts();
+              var removedIdxs = currentMes!.removeEmptyParts();
+              removedIdxs.add(mealPartViewIdx!);
+              appState.calculationStates[currentMes!.id]
+                  ?.removePartsByIdx(removedIdxs);
               appState.mealEditState = currentMes!.clone();
               mealPartViewIdx = null;
               currentView = MealViewState.meal;
             },
           ));
+    } else {
+      throw UnimplementedError();
     }
   }
 }
@@ -777,5 +813,173 @@ class _MealPartPageState extends State<MealPartPage> {
                             textAlign: TextAlign.center)))),
           ])
         ]);
+  }
+}
+
+class CalculatorPage extends StatefulWidget {
+  final Meal meal;
+  final void Function() backFunction;
+  const CalculatorPage(
+      {super.key, required this.meal, required this.backFunction});
+
+  @override
+  State<CalculatorPage> createState() => _CalculatorPageState();
+}
+
+class _CalculatorPageState extends State<CalculatorPage> {
+  ChCalculationState calcState = ChCalculationState();
+
+  Widget buildMealPartCalcRow(BuildContext context, AppState appState,
+      List<int> allowedPartIdxs, int calcStateIdx) {
+    List<String> dropDownLabels = [];
+
+    for (var partIdx in allowedPartIdxs) {
+      var part = widget.meal.parts[partIdx];
+      dropDownLabels.add(
+          "${part.name} (${optFormatFloat(part.totalChPer100G())} Kh. /100g)");
+    }
+
+    Widget dropDownMenu = expandedWithPadding(
+        child: DropdownButton<int>(
+            value: calcState.mealPartIdxs[calcStateIdx],
+            isExpanded: true,
+            itemHeight: null,
+            items: allowedPartIdxs
+                .map((item) => DropdownMenuItem<int>(
+                      value: item,
+                      child: padding(
+                          child: textView(
+                        dropDownLabels[item],
+                        // overflow: TextOverflow.ellipsis,
+                        softWrap: true,
+                      )),
+                    ))
+                .toList(),
+            onChanged: (value) {
+              calcState.mealPartIdxs[calcStateIdx] = value;
+              appState.saveCalcStateOf(widget.meal.id, calcState);
+            }));
+
+    // Widget partNameWidget = expandedWithPadding(child: textView(emptyStrToDash(meal.parts[partIdx].name), textAlign: TextAlign.center));
+
+    Widget weightInputField = expandedWithPadding(
+        child: inputField(
+      value: optFormatFloat(calcState.weights[calcStateIdx]),
+      labelText: "g",
+      type: InputFieldType.number,
+      onChanged: (value) {
+        var weight = double.tryParse(value);
+        calcState.weights[calcStateIdx] = weight;
+      },
+      onFocusLoss: () => appState.saveCalcStateOf(widget.meal.id, calcState),
+    ));
+
+    calcState.carbohydratesGAt(widget.meal, calcStateIdx);
+
+    Widget totalKhField = expandedWithPadding(
+        child: Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: [
+      expandedWithPadding(
+          child: textView(
+              optFormatFloat(
+                  calcState.carbohydratesGAt(widget.meal, calcStateIdx),
+                  defaultVal: "?"),
+              bold: true,
+              textAlign: TextAlign.right)),
+      expandedWithPadding(child: textView("g. Kh.", textAlign: TextAlign.left))
+    ]));
+
+    return Container(
+        color: calcStateIdx % 2 == 0 ? Theme.of(context).hoverColor : null,
+        child: Row(
+          children: [dropDownMenu, weightInputField, totalKhField],
+        ));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    AppState appState = context.watch();
+
+    calcState =
+        appState.calculationStates[widget.meal.id] ?? ChCalculationState();
+
+    if (calcState.isEmpty || !calcState.lastIsEmpty()) {
+      calcState.addEmpty();
+    }
+
+    List<int> partIdxCandidates = [];
+
+    for (var (i, part) in widget.meal.parts.indexed) {
+      if (part.totalChPerG() != null) partIdxCandidates.add(i);
+    }
+
+    // var partIdxCandidates = widget.meal.parts.indexed
+    //     .where((i,element) => element.totalChPerG() != null)
+    //     .toList();
+
+    List<Widget> calcRows = [];
+
+    for (var i = 0; i < calcState.length; i++) {
+      calcRows
+          .add(buildMealPartCalcRow(context, appState, partIdxCandidates, i));
+    }
+
+    var screenWidth = MediaQuery.of(context).size.width;
+
+    double buttonWidth = min(0.27 * screenWidth, 200);
+
+    Widget backButton =
+        TextButton(onPressed: widget.backFunction, child: textView("Terug"));
+
+    Widget resetButton = TextButton(
+        onPressed: () => showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+                  title: textView(
+                      "Weet je zeker dat je de calculator wil resetten?"),
+                  actions: [
+                    TextButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        child: textView("Nee")),
+                    TextButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          // appState.saveCalcStateOf(widget.meal.id, ChCalculationState());
+                          appState.removeCalcStateOf(widget.meal.id);
+                        },
+                        child: textView("Ja")),
+                  ],
+                )),
+        child: textView("Reset"));
+
+    var totalCh = calcState.totalCarbohydratesG(widget.meal);
+
+    // TODO: implement build
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            heading("Deelgerecht"),
+            heading("Gewicht"),
+            heading("Kh. Tot.")
+          ].map((e) => padding(child: e)).toList(),
+        ),
+        Expanded(
+            child: ListView(
+          children: calcRows,
+        )),
+        padding(
+            child: heading(
+                "Totaal g. Koolhydraten: ${optFormatFloat(totalCh, defaultVal: "?")}")),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [backButton, resetButton]
+              .map(
+                  (e) => padding(child: SizedBox(width: buttonWidth, child: e)))
+              .toList(),
+        )
+        //TODO reset and backbuttons
+      ],
+    );
   }
 }

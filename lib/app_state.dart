@@ -53,7 +53,6 @@ class AppState extends ChangeNotifier {
     await saveMealEditState();
   }
 
-
   set viewState(ViewState viewState) {
     _viewState = viewState;
     notifyListeners();
@@ -79,11 +78,9 @@ class AppState extends ChangeNotifier {
   String generateNewMealId() {
     assert(initialized);
 
-    var candidate = generateRandomString(mealIdLength) +
-        DateTime.now().millisecondsSinceEpoch.toString();
-
+    var candidate = generateRandomIdentifier(mealIdLength);
     while (meals.containsKey(candidate)) {
-      candidate = generateRandomString(mealIdLength);
+      candidate = generateRandomIdentifier(mealIdLength);
     }
 
     return candidate;
@@ -104,18 +101,20 @@ class AppState extends ChangeNotifier {
     if (notify) notifyListeners();
   }
 
-  String _mkMealCalcStateSettingStr (String mealId) {
+  String _mkMealCalcStateSettingStr(String mealId) {
     return "$mealCalcStateSettingPrefix$mealId";
   }
 
-  Future<void> saveCalcStateOf(String mealId, ChCalculationState calcState, {bool notify = true}) async {
+  Future<void> saveCalcStateOf(String mealId, ChCalculationState calcState,
+      {bool notify = true}) async {
+    calcState.removeEmpties();
     calculationStates[mealId] = calcState;
 
     if (notify) notifyListeners();
 
     var prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_mkMealCalcStateSettingStr(mealId), jsonEncode(calcState.toJson()));
-    
+    await prefs.setString(
+        _mkMealCalcStateSettingStr(mealId), jsonEncode(calcState.toJson()));
   }
 
   Future<void> removeCalcStateOf(String mealId, {bool notify = true}) async {
@@ -131,8 +130,7 @@ class AppState extends ChangeNotifier {
     return "$mealSettingPrefix$mealId";
   }
 
-  Future<void> addMealEditState(MealEditState mes,
-      {bool notify = true}) async {
+  Future<void> addMealEditState(MealEditState mes, {bool notify = true}) async {
     await saveMeal(mes.toMeal(), notify: notify);
   }
 
@@ -158,13 +156,13 @@ class AppState extends ChangeNotifier {
 
     // Load meals
     for (final k in prefs.getKeys()) {
-
       id() => k.split("-")[1];
 
       if (k.startsWith(mealSettingPrefix)) {
         meals[id()] = Meal.fromJson(jsonDecode(prefs.getString(k)!));
       } else if (k.startsWith(mealCalcStateSettingPrefix)) {
-        calculationStates[id()] = ChCalculationState.fromJson(jsonDecode(prefs.getString(k)!));
+        calculationStates[id()] =
+            ChCalculationState.fromJson(jsonDecode(prefs.getString(k)!));
       }
     }
 

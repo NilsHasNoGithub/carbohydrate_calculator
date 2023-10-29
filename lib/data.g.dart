@@ -77,7 +77,6 @@ MealEditState _$MealEditStateFromJson(Map<String, dynamic> json) =>
       parts: (json['parts'] as List<dynamic>)
           .map((e) => MealPart.fromJson(e as Map<String, dynamic>))
           .toList(),
-      inCalculator: json['inCalculator'] as bool? ?? false,
     );
 
 Map<String, dynamic> _$MealEditStateToJson(MealEditState instance) =>
@@ -86,19 +85,20 @@ Map<String, dynamic> _$MealEditStateToJson(MealEditState instance) =>
       'name': instance.name,
       'isFavorite': instance.isFavorite,
       'parts': instance.parts,
-      'inCalculator': instance.inCalculator,
     };
 
 ChCalculationState _$ChCalculationStateFromJson(Map<String, dynamic> json) =>
     ChCalculationState()
       ..mealPartIdxs =
-          (json['mealPartIdxs'] as List<dynamic>).map((e) => e as int).toList()
+          (json['mealPartIdxs'] as List<dynamic>).map((e) => e as int?).toList()
       ..weights = (json['weights'] as List<dynamic>)
-          .map((e) => (e as num).toDouble())
-          .toList();
+          .map((e) => (e as num?)?.toDouble())
+          .toList()
+      ..partsRemoved = json['partsRemoved'] as bool;
 
 Map<String, dynamic> _$ChCalculationStateToJson(ChCalculationState instance) =>
     <String, dynamic>{
       'mealPartIdxs': instance.mealPartIdxs,
       'weights': instance.weights,
+      'partsRemoved': instance.partsRemoved,
     };

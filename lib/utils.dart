@@ -21,6 +21,13 @@ String generateRandomString(int length) {
   return buffer.toString();
 }
 
+String generateRandomIdentifier([int randStrLength = 10]) {
+  var randString = generateRandomString(randStrLength);
+  var currentTimeMs = DateTime.now().millisecondsSinceEpoch;
+
+  return randString + currentTimeMs.toString();
+}
+
 enum InputFieldType { text, number }
 
 final _validFloatFieldChars = "0123456789.".characters.toSet();
@@ -114,7 +121,8 @@ Widget onFocusWrap(
       });
 }
 
-String emptyStrToDash(String input) => input.isEmpty ? "-" : input;
+String emptyStrToDash(String? input) =>
+    input == null || input.isEmpty ? "-" : input;
 
 String formatFloat(double float) {
   //This function should not be this complicated :(
@@ -137,9 +145,9 @@ String formatFloat(double float) {
   return result.substring(0, endIndex + 1);
 }
 
-String optFormatFloat(double? float) {
+String optFormatFloat(double? float, {String defaultVal = ""}) {
   if (float == null) {
-    return "";
+    return defaultVal;
   }
 
   return formatFloat(float);
@@ -161,7 +169,9 @@ Widget textView(String text,
     {double size = defaultFontSize,
     TextAlign? textAlign,
     Color? textColor,
-    bool bold = false}) {
+    TextOverflow? overflow,
+    bool bold = false,
+    bool? softWrap}) {
   return Text(
     text,
     textAlign: textAlign,
@@ -170,6 +180,8 @@ Widget textView(String text,
       fontSize: size,
       fontWeight: bold ? FontWeight.bold : FontWeight.normal,
     ),
+    overflow: overflow,
+    softWrap: softWrap,
   );
 }
 

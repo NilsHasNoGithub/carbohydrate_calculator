@@ -127,6 +127,7 @@ class FoodContainerWeight {
 
 @JsonSerializable()
 class MealPart {
+  // String? identifier;
   String? name;
   FoodContainerWeight container;
   double? weightGTotal; // Weight of meal part + container it is in
@@ -268,14 +269,11 @@ class MealEditState {
   bool isFavorite = false;
   List<MealPart> parts;
 
-  bool inCalculator;
-
   MealEditState({
     required this.id,
     this.name,
     this.isFavorite = false,
     required this.parts,
-    this.inCalculator = false,
   });
 
   factory MealEditState.empty(String id) => MealEditState(id: id, parts: []);
@@ -327,13 +325,26 @@ class MealEditState {
                 .reduce((value, element) => value || element));
   }
 
-  void removeEmptyParts({bool alsoRemoveEmptyIngredients = true}) {
-    parts = parts.where((element) => element.hasData()).toList();
+  List<int> removeEmptyParts({bool alsoRemoveEmptyIngredients = true}) {
+    List<int> idxsToRemove = [];
+
+    for (var i = 0; i < parts.length; i++) {
+      if (!parts[i].hasData()) {
+        idxsToRemove.add(i);
+      }
+    }
+
+    for (var i in idxsToRemove.reversed) {
+      parts.removeAt(i);
+    }
+
     if (alsoRemoveEmptyIngredients) {
       for (var element in parts) {
         element.removeEmptyParts();
       }
     }
+
+    return idxsToRemove;
   }
 
   factory MealEditState.fromJson(Map<String, dynamic> json) =>
@@ -341,24 +352,39 @@ class MealEditState {
   Map<String, dynamic> toJson() => _$MealEditStateToJson(this);
 }
 
-
-
-
 @JsonSerializable()
 class ChCalculationState {
-  List<int> mealPartIdxs = [];
-  List<double> weights = [];
+  List<int?> mealPartIdxs = [];
+  List<double?> weights = [];
+  bool partsRemoved = false;
 
   ChCalculationState();
 
-  double totalCarbohydratesG(Meal meal, {bool skipIncompleteParts = false}) {
-    assert (mealPartIdxs.length == weights.length);
+  bool get isEmpty {
+    assert(mealPartIdxs.isEmpty == weights.isEmpty);
+
+    return mealPartIdxs.isEmpty && weights.isEmpty;
+  }
+
+  int get length {
+    assert(mealPartIdxs.length == weights.length);
+
+    return mealPartIdxs.length;
+  }
+
+  double totalCarbohydratesG(Meal meal,
+      {bool skipIncompleteParts = false, bool skipMissingCalcFields = true}) {
+    assert(mealPartIdxs.length == weights.length);
 
     var result = 0.0;
 
-    for (var i=0;i<mealPartIdxs.length;i++) {
+    for (var i = 0; i < mealPartIdxs.length; i++) {
       var partIdx = mealPartIdxs[i];
       var weight = weights[i];
+
+      if (partIdx == null || weight == null) {
+        continue;
+      }
 
       var part = meal.parts[partIdx];
       var partChPerGram = part.totalChPerG();
@@ -374,6 +400,46 @@ class ChCalculationState {
     return result;
   }
 
+  double? carbohydratesGAt(Meal meal, int idx) {
+    var partIdx = mealPartIdxs[idx];
+    var weight = weights[idx];
+
+    if (partIdx == null || weight == null) {
+      return null;
+    }
+
+    var chPerG = meal.parts[partIdx].totalChPerG();
+    if (chPerG == null) {
+      return null;
+    }
+
+    return weight * chPerG;
+  }
+
+  bool lastIsEmpty() {
+    assert(mealPartIdxs.length == weights.length);
+
+    return isEmpty || (mealPartIdxs.last == null && weights.last == null);
+  }
+
+  List<int> removeEmpties() {
+    assert(mealPartIdxs.length == weights.length);
+    List<int> toRemove = [];
+
+    for (var i = 0; i < mealPartIdxs.length; i++) {
+      if (mealPartIdxs[i] == null && weights[i] == null) {
+        toRemove.add(i);
+      }
+    }
+
+    for (var i in toRemove.reversed) {
+      mealPartIdxs.removeAt(i);
+      weights.removeAt(i);
+    }
+
+    return toRemove;
+  }
+
   void addPartAndWeight(int partIdx, double weight) {
     mealPartIdxs.add(partIdx);
     weights.add(weight);
@@ -387,4 +453,25 @@ class ChCalculationState {
   factory ChCalculationState.fromJson(Map<String, dynamic> json) =>
       _$ChCalculationStateFromJson(json);
   Map<String, dynamic> toJson() => _$ChCalculationStateToJson(this);
+
+  void removePartsByIdx(List<int> removedPartIdxs) {
+    List<int> toRemoveLocal = [];
+
+    for (var localIdx = 0; localIdx < mealPartIdxs.length; localIdx++) {
+      if (removedPartIdxs.contains(mealPartIdxs[localIdx])) {
+        toRemoveLocal.add(localIdx);
+      }
+    }
+
+    for (var localIdx in toRemoveLocal.reversed) {
+      mealPartIdxs.removeAt(localIdx);
+      weights.removeAt(localIdx);
+      partsRemoved = true;
+    }
+  }
+
+  void addEmpty() {
+    mealPartIdxs.add(null);
+    weights.add(null);
+  }
 }

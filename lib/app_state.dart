@@ -8,7 +8,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 const mealSettingPrefix = "meal-";
 const mealCalcStateSettingPrefix = "mealCalcState-";
 const mealEditStateKey = "mealEditState";
-const calculationStateKey = "calculationState";
 
 const mealIdLength = 25;
 
@@ -24,7 +23,6 @@ class AppState extends ChangeNotifier {
   bool initialized = false;
   ViewState _viewState = ViewState.historyView;
   MealEditState? _mealEditState;
-  ChCalculationState? _calculationState;
 
   Map<String, Meal> meals = {};
   List<String> _mealsIdsSortedByDate = [];
@@ -55,20 +53,6 @@ class AppState extends ChangeNotifier {
     await saveMealEditState();
   }
 
-  set calculationState(ChCalculationState? calculationState) {
-    _calculationState = calculationState;
-    saveCalculationState();
-    notifyListeners();
-  }
-
-  ChCalculationState? get calculationState {
-    return _calculationState;
-  }
-
-  Future<void> setCalculationStateNoUpdate(ChCalculationState? calculationState) async {
-    _calculationState = calculationState;
-    await saveCalculationState();
-  }
 
   set viewState(ViewState viewState) {
     _viewState = viewState;
@@ -89,19 +73,6 @@ class AppState extends ChangeNotifier {
     } else {
       var jsonString = jsonEncode(mesCopy.toJson());
       await prefs.setString(mealEditStateKey, jsonString);
-    }
-  }
-
-  Future<void> saveCalculationState() async {
-    final prefs = await SharedPreferences.getInstance();
-
-    var stateCopy = _calculationState;
-
-    if (stateCopy == null) {
-      await prefs.remove(calculationStateKey);
-    } else {
-      var jsonString = jsonEncode(stateCopy.toJson());
-      await prefs.setString(calculationStateKey, jsonString);
     }
   }
 
@@ -203,16 +174,6 @@ class AppState extends ChangeNotifier {
     if (mesJsonString != null) {
       var json = jsonDecode(mesJsonString);
       mealEditState = MealEditState.fromJson(json);
-      viewState = ViewState.mealView;
-    }
-
-    // Load calculation state
-
-    var calcStateJsonString = prefs.getString(calculationStateKey);
-
-    if (calcStateJsonString != null) {
-      calculationState = ChCalculationState.fromJson(jsonDecode(calcStateJsonString));
-      // Calculation view takes precedence
       viewState = ViewState.mealView;
     }
 

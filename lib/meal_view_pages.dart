@@ -16,6 +16,7 @@ const inputFieldPadding = 5.0;
 enum MealViewState {
   meal,
   mealPart,
+  calculator,
 }
 
 class MealPage extends StatefulWidget {
@@ -110,7 +111,7 @@ class _MealPageState extends State<MealPage> {
 
   Widget saveMealButton(BuildContext context, AppState appState) {
     assert(currentMes != null);
-    var saveAsCopyOption = currentMes!.id != null;
+    var saveAsCopyOption = appState.meals.containsKey(currentMes!.id);
 
     void Function() onPressed;
 

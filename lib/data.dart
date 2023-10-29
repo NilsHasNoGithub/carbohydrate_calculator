@@ -268,11 +268,14 @@ class MealEditState {
   bool isFavorite = false;
   List<MealPart> parts;
 
+  bool inCalculator;
+
   MealEditState({
     required this.id,
     this.name,
     this.isFavorite = false,
     required this.parts,
+    this.inCalculator = false,
   });
 
   factory MealEditState.empty(String id) => MealEditState(id: id, parts: []);

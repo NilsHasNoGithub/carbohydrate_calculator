@@ -320,7 +320,7 @@ class MealEditState {
   bool hasData() {
     return name != null ||
         (parts.isNotEmpty &&
-            !parts
+            parts
                 .map((e) => e.hasData())
                 .reduce((value, element) => value || element));
   }

@@ -40,7 +40,8 @@ Widget inputField(
     void Function()? onTapOutside,
     void Function()? onTap,
     void Function()? onFocusLoss,
-    double fontSize = defaultFontSize}) {
+    double fontSize = defaultFontSize,
+    bool readOnly = false}) {
   var controller = TextEditingController(text: value);
 
   if (value != null) {
@@ -89,6 +90,7 @@ Widget inputField(
     keyboardType: kbdType,
     inputFormatters: inputFormatters,
     onChanged: onChanged,
+    readOnly: readOnly,
     onTap: onTap,
   );
 

@@ -4,6 +4,7 @@ import 'dart:math';
 
 import 'package:carbohydrate_calculator/app_state.dart';
 import 'package:carbohydrate_calculator/data.dart';
+import 'package:carbohydrate_calculator/meal_part_picker.dart';
 import 'package:carbohydrate_calculator/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -16,6 +17,7 @@ const inputFieldPadding = 5.0;
 enum MealViewState {
   meal,
   mealPart,
+  importMealPart,
   calculator,
 }
 
@@ -305,12 +307,20 @@ class _MealPageState extends State<MealPage> {
       mealPartRows.add(buildMealPartRow(appState, part, index));
     }
 
-    mealPartRows.add(TextButton(
-        onPressed: () => setState(() {
-              mealPartViewIdx = currentMes!.parts.length;
-              currentView = MealViewState.mealPart;
-            }),
-        child: const Text("Voeg deelgerecht toe")));
+    mealPartRows
+        .add(Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: [
+      TextButton(
+          onPressed: () => setState(() {
+                currentView = MealViewState.importMealPart;
+              }),
+          child: const Text("Importeer deelgerecht")),
+      TextButton(
+          onPressed: () => setState(() {
+                mealPartViewIdx = currentMes!.parts.length;
+                currentView = MealViewState.mealPart;
+              }),
+          child: const Text("Nieuw deelgerecht"))
+    ]));
 
     //TODO add name and isFavorite
 
@@ -424,11 +434,6 @@ class _MealPageState extends State<MealPage> {
       mesBeforeEdit = currentMes!.clone();
     }
 
-    //TODO button save: set currently editinh meal to null (are you sure), reset currentMes
-    //TODO button cancel: set currently editinh meal to null, reset currentMes
-    //TODO button save a copy, reset currentMes
-    //TODO button favorite
-
     /////////
 
     // TODO: implement build
@@ -513,6 +518,19 @@ class _MealPageState extends State<MealPage> {
               currentView = MealViewState.meal;
             },
           ));
+    } else if (currentView == MealViewState.importMealPart) {
+      return MealPartPicker(
+          onPick: (part) {
+            setState(() {
+              currentMes!.parts.add(part);
+              var removedIdxs = currentMes!.removeEmptyParts();
+              appState.calculationStates[currentMes!.id]
+                  ?.removePartsByIdx(removedIdxs);
+              appState.mealEditState = currentMes!.clone();
+              currentView = MealViewState.meal;
+            });
+          },
+          onBack: () => currentView = MealViewState.meal);
     } else {
       throw UnimplementedError();
     }

@@ -35,6 +35,7 @@ final _validFloatFieldChars = "0123456789.".characters.toSet();
 Widget inputField(
     {required String labelText,
     InputFieldType type = InputFieldType.text,
+    String? initialValue,
     String? value,
     void Function(String)? onChanged,
     void Function()? onTapOutside,
@@ -84,7 +85,7 @@ Widget inputField(
   TextFormField textFormField = TextFormField(
     controller: controller,
     style: TextStyle(fontSize: fontSize),
-    // initialValue: value,
+    initialValue: initialValue,
     decoration: InputDecoration(
         border: const UnderlineInputBorder(), labelText: labelText),
     keyboardType: kbdType,

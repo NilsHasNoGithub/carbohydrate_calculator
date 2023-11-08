@@ -90,6 +90,7 @@ class _MealPageState extends State<MealPage> {
     assert(currentMes != null);
     var toSave = currentMes!.clone();
     toSave.removeEmptyParts();
+    toSave.id = appState.generateNewMealId();
     if (toSave.hasData() || allowEmpty) appState.addMealEditState(toSave);
     appState.viewState = defaultViewState;
     exitMealPage(appState);

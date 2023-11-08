@@ -27,8 +27,10 @@ class _MealPartPickerState extends State<MealPartPicker> {
         // .where((element) => filter == null || element.name.contains(filter!))
         .where((element) => !favoritesOnly || element.isFavorite)
         .expand((e) => e.parts.map((e2) => (e, e2)))
-        .where((e) => filter==null || (e.$2.name?.toLowerCase() ?? "").contains(filter!.toLowerCase()));
-        // .where((e) => e.$2.totalChPer100G() != null);
+        .where((e) =>
+            filter == null ||
+            (e.$2.name?.toLowerCase() ?? "").contains(filter!.toLowerCase()));
+    // .where((e) => e.$2.totalChPer100G() != null);
 
     List<Widget> mealPartSelectButton = [];
 
@@ -42,15 +44,22 @@ class _MealPartPickerState extends State<MealPartPicker> {
             child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  expandedWithPadding(child: textView(emptyStrToDash(mealPart.name ?? ""), textAlign: TextAlign.center)),
-                  expandedWithPadding(child: textView(meal.dateFormatted(), textAlign: TextAlign.center)),
-                  Expanded(child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        textView(optFormatFloat(mealPart.totalChPer100G(), defaultVal: "?"),
-                            bold: true),
-                        textView("Kh./100g", size: 12.0)
-                      ].map((e) => padding(child: e)).toList()))
+                  expandedWithPadding(
+                      child: textView(emptyStrToDash(mealPart.name ?? ""),
+                          textAlign: TextAlign.center)),
+                  expandedWithPadding(
+                      child: textView(meal.dateFormatted(),
+                          textAlign: TextAlign.center)),
+                  Expanded(
+                      child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            textView(
+                                optFormatFloat(mealPart.totalChPer100G(),
+                                    defaultVal: "?"),
+                                bold: true),
+                            textView("Kh./100g", size: 12.0)
+                          ].map((e) => padding(child: e)).toList()))
                 ]),
           )));
     }
@@ -62,30 +71,15 @@ class _MealPartPickerState extends State<MealPartPicker> {
         width: buttonWidth,
         child: TextButton(onPressed: widget.onBack, child: textView("Terug")));
 
-    var filterField = padding(child: TextFormField(
-      initialValue: filter,
-      onChanged: (value) => setState(() {
-        filter = value;
-      }),
-      style: const TextStyle(fontSize: defaultFontSize),
-      decoration: const InputDecoration(
-        border: UnderlineInputBorder(), labelText: "Filter"),
-    ));
-
-    var favoritesFilterButton = Row(
-      mainAxisAlignment: MainAxisAlignment.spaceAround,
-      children: [
-        padding(child: textView("Alleen favorieten: ")),
-        padding(child: Checkbox(value: favoritesOnly, onChanged: (newValue) => setState(() {
-          favoritesOnly =newValue ?? false;
-        })))
-      ],
-    );
-
     return Column(
       children: [
-        filterField,
-        favoritesFilterButton,
+        FilterContainer(
+            onFilterChange: (newValue) => setState(() {
+                  filter = newValue;
+                }),
+            onFavoritesOnlyChange: (newValue) => setState(() {
+                  favoritesOnly = newValue;
+                })),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           mainAxisSize: MainAxisSize.max,
@@ -156,7 +150,9 @@ class _MealPartPickerState extends State<MealPartPicker> {
         Expanded(
             child: ListView(
                 children: [
-                      padding(child: heading("Ingredienten", textAlign: TextAlign.center)),
+                      padding(
+                          child: heading("Ingredienten",
+                              textAlign: TextAlign.center)),
                       Row(
                         children: [
                           expandedWithPadding(child: textView("Naam")),
@@ -168,7 +164,9 @@ class _MealPartPickerState extends State<MealPartPicker> {
                     ] +
                     ingredientRows +
                     [
-                      padding(child: heading("Gegevens deelgerecht", textAlign: TextAlign.center)),
+                      padding(
+                          child: heading("Gegevens deelgerecht",
+                              textAlign: TextAlign.center)),
                       Row(
                         children: [
                           textView("Naam van deelgerecht:"),

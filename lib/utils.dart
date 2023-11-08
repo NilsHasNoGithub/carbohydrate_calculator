@@ -200,3 +200,54 @@ String decompressStr(String compressed) {
   var result = utf8.decode(decompressedBytes);
   return result;
 }
+
+class FilterContainer extends StatefulWidget {
+  final void Function(String) onFilterChange;
+  final void Function(bool) onFavoritesOnlyChange;
+
+  FilterContainer(
+      {super.key,
+      required this.onFilterChange,
+      required this.onFavoritesOnlyChange});
+
+  @override
+  State<FilterContainer> createState() => _FilterContainerState();
+}
+
+class _FilterContainerState extends State<FilterContainer> {
+  String filter = "";
+  bool favoritesOnly = false;
+
+  @override
+  Widget build(BuildContext context) {
+    // TODO: implement build
+    var filterField = expandedWithPadding(
+        child: TextFormField(
+      initialValue: filter,
+      onChanged: (value) => setState(() {
+        filter = value;
+        widget.onFilterChange(value);
+      }),
+      style: const TextStyle(fontSize: defaultFontSize),
+      decoration: const InputDecoration(
+          border: UnderlineInputBorder(), labelText: "Filter"),
+    ));
+
+    double sz = min(.35* MediaQuery.of(context).size.width, 200.0);
+
+    var favoritesFilterButton =
+        SizedBox(width: sz,child:padding(
+            child: CheckboxListTile(
+                title: textView("Fav.:"),
+                value: favoritesOnly,
+                controlAffinity: ListTileControlAffinity.trailing,
+                onChanged: (newValue) => setState(() {
+                      favoritesOnly = newValue ?? false;
+                      widget.onFavoritesOnlyChange(newValue ?? false);
+                    }))));
+
+    return Row(
+      children: [filterField, favoritesFilterButton],
+    );
+  }
+}

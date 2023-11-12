@@ -475,3 +475,28 @@ class ChCalculationState {
     weights.add(null);
   }
 }
+
+enum CompareBy {
+  name,
+  date;
+
+  int compareMeals(Meal m1, Meal m2) {
+    switch (this) {
+      case CompareBy.name:
+        return m1.name.toLowerCase().compareTo(m2.name.toLowerCase());
+      case CompareBy.date:
+        return m2.timestamp.compareTo(m1.timestamp);
+    }
+  }
+
+  int compareMealParts(MealPart p1, Meal m1, MealPart p2, Meal m2) {
+    switch (this) {
+      case CompareBy.name:
+        return (p1.name ?? "")
+            .toLowerCase()
+            .compareTo((p2.name ?? "").toLowerCase());
+      case CompareBy.date:
+        return m2.timestamp.compareTo(m1.timestamp);
+    }
+  }
+}

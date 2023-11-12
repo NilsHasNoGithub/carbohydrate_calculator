@@ -12,6 +12,7 @@ class HistoryView extends StatefulWidget {
 }
 
 class _HistoryViewState extends State<HistoryView> {
+  CompareBy sortBy = CompareBy.name;
   String filter = "";
   bool favoritesOnly = false;
 
@@ -59,8 +60,12 @@ class _HistoryViewState extends State<HistoryView> {
     AppState appState = context.watch();
 
     var meals = appState.mealsSortedByDate
-      .where((element) => !favoritesOnly || element.isFavorite)
-      .where((element) => element.name.toLowerCase().contains(filter.toLowerCase()));
+        .where((element) => !favoritesOnly || element.isFavorite)
+        .where((element) =>
+            element.name.toLowerCase().contains(filter.toLowerCase()))
+        .toList();
+
+    meals.sort((m1, m2) => sortBy.compareMeals(m1, m2));
 
     List<Widget> mealRows = [];
 
@@ -68,30 +73,53 @@ class _HistoryViewState extends State<HistoryView> {
       mealRows.add(buildMealRow(context, appState, m, i));
     }
 
-    List<Widget> filter_container = appState.mealsSortedByDate.isEmpty ? [] : [
-      FilterContainer(onFilterChange: (newValue) => setState(() {
-        filter = newValue;
-      }), onFavoritesOnlyChange: (newValue) => setState(() {
-        favoritesOnly = newValue;
-      }))
-    ];
+    List<Widget> filter_container = appState.mealsSortedByDate.isEmpty
+        ? []
+        : [
+            FilterContainer(
+                onFilterChange: (newValue) => setState(() {
+                      filter = newValue;
+                    }),
+                onFavoritesOnlyChange: (newValue) => setState(() {
+                      favoritesOnly = newValue;
+                    }))
+          ];
+
+    var textSz = defaultFontSize * 1.3;
 
     // TODO: implement build
-    return Column(children: filter_container + [
-      Row(
-        children: [
-          expandedWithPadding(
-              child: heading("Naam", textAlign: TextAlign.center)),
-          expandedWithPadding(
-              child: heading("Datum", textAlign: TextAlign.center)),
-          expandedWithPadding(
-              child: heading("Favoriet", textAlign: TextAlign.center))
-        ],
-      ),
-      expandedWithPadding(
-          child: ListView(
-        children: mealRows,
-      ))
-    ]);
+    return Column(
+        children: filter_container +
+            [
+              Row(
+                children: [
+                  expandedWithPadding(
+                      child: GestureDetector(
+                          onTap: () => setState(() {
+                                sortBy = CompareBy.name;
+                              }),
+                          child: textView("Naam",
+                              textAlign: TextAlign.center,
+                              size: textSz,
+                              bold: sortBy == CompareBy.name))),
+                  expandedWithPadding(
+                      child: GestureDetector(
+                          onTap: () => setState(() {
+                                sortBy = CompareBy.date;
+                              }),
+                          child: textView("Datum",
+                              textAlign: TextAlign.center,
+                              size: textSz,
+                              bold: sortBy == CompareBy.date))),
+                  expandedWithPadding(
+                      child: textView("Favoriet",
+                          textAlign: TextAlign.center, size: textSz))
+                ],
+              ),
+              expandedWithPadding(
+                  child: ListView(
+                children: mealRows,
+              ))
+            ]);
   }
 }

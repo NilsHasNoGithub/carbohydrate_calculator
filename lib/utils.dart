@@ -233,10 +233,11 @@ class _FilterContainerState extends State<FilterContainer> {
           border: UnderlineInputBorder(), labelText: "Filter"),
     ));
 
-    double sz = min(.35* MediaQuery.of(context).size.width, 200.0);
+    double sz = min(.35 * MediaQuery.of(context).size.width, 200.0);
 
-    var favoritesFilterButton =
-        SizedBox(width: sz,child:padding(
+    var favoritesFilterButton = SizedBox(
+        width: sz,
+        child: padding(
             child: CheckboxListTile(
                 title: textView("Fav.:"),
                 value: favoritesOnly,
@@ -250,4 +251,14 @@ class _FilterContainerState extends State<FilterContainer> {
       children: [filterField, favoritesFilterButton],
     );
   }
+}
+
+List<T> uniqueBy<T, U>(Iterable<T> items, U Function(T) by) {
+  Map<U, T> result = {};
+
+  for (var item in items) {
+    result[by(item)] = item;
+  }
+
+  return result.values.toList();
 }

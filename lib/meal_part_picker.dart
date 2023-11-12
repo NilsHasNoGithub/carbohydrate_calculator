@@ -20,17 +20,20 @@ class _MealPartPickerState extends State<MealPartPicker> {
   MealPart? candidate;
   String? filter;
   bool favoritesOnly = false;
+  CompareBy compareBy = CompareBy.name;
 
   Widget partsOverview(BuildContext context, AppState appState) {
     var mealsByDate = appState.mealsSortedByDate;
     var mealPartsByDate = mealsByDate
-        // .where((element) => filter == null || element.name.contains(filter!))
         .where((element) => !favoritesOnly || element.isFavorite)
         .expand((e) => e.parts.map((e2) => (e, e2)))
         .where((e) =>
             filter == null ||
-            (e.$2.name?.toLowerCase() ?? "").contains(filter!.toLowerCase()));
-    // .where((e) => e.$2.totalChPer100G() != null);
+            (e.$2.name?.toLowerCase() ?? "").contains(filter!.toLowerCase()))
+        .toSet()
+        .toList()
+      ..sort(
+          (e1, e2) => compareBy.compareMealParts(e1.$2, e1.$1, e2.$2, e2.$1));
 
     List<Widget> mealPartSelectButton = [];
 
@@ -71,6 +74,8 @@ class _MealPartPickerState extends State<MealPartPicker> {
         width: buttonWidth,
         child: TextButton(onPressed: widget.onBack, child: textView("Terug")));
 
+    var textSz = defaultFontSize * 1.3;
+
     return Column(
       children: [
         FilterContainer(
@@ -84,9 +89,19 @@ class _MealPartPickerState extends State<MealPartPicker> {
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           mainAxisSize: MainAxisSize.max,
           children: [
-            heading("Deelgerecht"),
-            heading("Datum"),
-            heading("Koolhydraten")
+            GestureDetector(
+                onTap: () => setState(() {
+                      compareBy = CompareBy.name;
+                    }),
+                child: textView("Deelgerecht",
+                    size: textSz, bold: compareBy == CompareBy.name)),
+            GestureDetector(
+                onTap: () => setState(() {
+                      compareBy = CompareBy.date;
+                    }),
+                child: textView("Datum",
+                    size: textSz, bold: compareBy == CompareBy.date)),
+            textView("Koolhydraten", size: textSz)
           ].map((e) => padding(child: e)).toList(),
         ),
         Expanded(

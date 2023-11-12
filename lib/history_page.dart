@@ -4,8 +4,16 @@ import 'package:carbohydrate_calculator/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-class HistoryView extends StatelessWidget {
+class HistoryView extends StatefulWidget {
   const HistoryView({super.key});
+
+  @override
+  State<HistoryView> createState() => _HistoryViewState();
+}
+
+class _HistoryViewState extends State<HistoryView> {
+  String filter = "";
+  bool favoritesOnly = false;
 
   Widget buildMealRow(
       BuildContext context, AppState appState, Meal meal, int idx) {
@@ -50,7 +58,9 @@ class HistoryView extends StatelessWidget {
   Widget build(BuildContext context) {
     AppState appState = context.watch();
 
-    var meals = appState.mealsSortedByDate;
+    var meals = appState.mealsSortedByDate
+      .where((element) => !favoritesOnly || element.isFavorite)
+      .where((element) => element.name.toLowerCase().contains(filter.toLowerCase()));
 
     List<Widget> mealRows = [];
 
@@ -58,8 +68,16 @@ class HistoryView extends StatelessWidget {
       mealRows.add(buildMealRow(context, appState, m, i));
     }
 
+    List<Widget> filter_container = appState.mealsSortedByDate.isEmpty ? [] : [
+      FilterContainer(onFilterChange: (newValue) => setState(() {
+        filter = newValue;
+      }), onFavoritesOnlyChange: (newValue) => setState(() {
+        favoritesOnly = newValue;
+      }))
+    ];
+
     // TODO: implement build
-    return Column(children: [
+    return Column(children: filter_container + [
       Row(
         children: [
           expandedWithPadding(

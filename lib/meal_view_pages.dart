@@ -532,8 +532,8 @@ class _MealPageState extends State<MealPage> {
             });
           },
           onBack: () => setState(() {
-            currentView = MealViewState.meal;
-          }));
+                currentView = MealViewState.meal;
+              }));
     } else {
       throw UnimplementedError();
     }

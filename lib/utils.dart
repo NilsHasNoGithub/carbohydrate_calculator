@@ -203,7 +203,7 @@ String decompressStr(String compressed) {
 
 class FilterContainer extends StatefulWidget {
   final void Function(String) onFilterChange;
-  final void Function(bool) onFavoritesOnlyChange;
+  final void Function(bool)? onFavoritesOnlyChange;
 
   FilterContainer(
       {super.key,
@@ -221,8 +221,7 @@ class _FilterContainerState extends State<FilterContainer> {
   @override
   Widget build(BuildContext context) {
     // TODO: implement build
-    var filterField = expandedWithPadding(
-        child: TextFormField(
+    var filterField = TextFormField(
       initialValue: filter,
       onChanged: (value) => setState(() {
         filter = value;
@@ -231,7 +230,13 @@ class _FilterContainerState extends State<FilterContainer> {
       style: const TextStyle(fontSize: defaultFontSize),
       decoration: const InputDecoration(
           border: UnderlineInputBorder(), labelText: "Filter"),
-    ));
+    );
+
+    
+
+    if (widget.onFavoritesOnlyChange == null) {
+      return filterField;
+    }
 
     double sz = min(.35 * MediaQuery.of(context).size.width, 200.0);
 
@@ -244,11 +249,11 @@ class _FilterContainerState extends State<FilterContainer> {
                 controlAffinity: ListTileControlAffinity.trailing,
                 onChanged: (newValue) => setState(() {
                       favoritesOnly = newValue ?? false;
-                      widget.onFavoritesOnlyChange(newValue ?? false);
+                      widget.onFavoritesOnlyChange!(newValue ?? false);
                     }))));
 
     return Row(
-      children: [filterField, favoritesFilterButton],
+      children: [expandedWithPadding(child: filterField), favoritesFilterButton],
     );
   }
 }

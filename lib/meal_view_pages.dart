@@ -4,6 +4,7 @@ import 'dart:math';
 
 import 'package:carbohydrate_calculator/app_state.dart';
 import 'package:carbohydrate_calculator/data.dart';
+import 'package:carbohydrate_calculator/ingredient_picker.dart';
 import 'package:carbohydrate_calculator/meal_part_picker.dart';
 import 'package:carbohydrate_calculator/utils.dart';
 import 'package:flutter/material.dart';
@@ -540,6 +541,11 @@ class _MealPageState extends State<MealPage> {
   }
 }
 
+enum MealPartViewState {
+  mealPart,
+  importIngredient,
+}
+
 class MealPartPage extends StatefulWidget {
   final MealPart currentlyEditing;
   final MealPartCallback backFunction;
@@ -563,6 +569,9 @@ class MealPartPage extends StatefulWidget {
 }
 
 class _MealPartPageState extends State<MealPartPage> {
+  MealPartViewState viewState = MealPartViewState.mealPart;
+
+
   Ingredient getOrAddIngredient(int index) {
     while (index >= widget.currentlyEditing.ingredients.length) {
       widget.currentlyEditing.ingredients.add(Ingredient.empty());
@@ -674,10 +683,7 @@ class _MealPartPageState extends State<MealPartPage> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    AppState appState = context.watch();
-
+  Widget buildMealPartView(BuildContext context, AppState appState) {
     var screenHeight = MediaQuery.of(context).size.height;
     var screenWidth = MediaQuery.of(context).size.width;
 
@@ -773,6 +779,11 @@ class _MealPartPageState extends State<MealPartPage> {
           ],
         ));
 
+      Widget ingredientImportButton = IconButton(onPressed: () => setState(() {
+        viewState = MealPartViewState.importIngredient;
+      }), icon: const Icon(Icons.file_upload));
+
+    //TODO add import button here
     return ListView(
         // mainAxisSize: MainAxisSize.max,
         // mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -780,7 +791,7 @@ class _MealPartPageState extends State<MealPartPage> {
           Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              heading("Ingredienten"),
+              Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, mainAxisSize: MainAxisSize.max ,children:[heading("Ingredienten"), ingredientImportButton]),
               Padding(
                   padding: const EdgeInsets.all(inputFieldPadding),
                   child: Column(
@@ -834,6 +845,24 @@ class _MealPartPageState extends State<MealPartPage> {
                             textAlign: TextAlign.center)))),
           ])
         ]);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    AppState appState = context.watch();
+
+    if (viewState == MealPartViewState.mealPart) {
+      return buildMealPartView(context, appState);
+    } else {
+      return IngredientPickerView(onBack: () => setState(() {
+        viewState = MealPartViewState.mealPart;
+      }), onPick: (ingredient) => setState(() {
+        widget.currentlyEditing.ingredients.add(ingredient);
+        widget.onChange(widget.currentlyEditing);
+        viewState = MealPartViewState.mealPart;
+      }));
+    }
+
   }
 }
 

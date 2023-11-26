@@ -51,7 +51,7 @@ class _IngredientPickerViewState extends State<IngredientPickerView> {
             .where((element) => (element.name!.toLowerCase()).contains(filter.toLowerCase())),
         (elem) => (elem.name, elem.chPerGram));
 
-    ingredients.sort((i1, i2) => (i1.name!).compareTo(i2.name!));
+    ingredients.sort((i1, i2) => (i1.name!.toLowerCase()).compareTo(i2.name!.toLowerCase()));
 
     List<Widget> ingredientRows = [];
 

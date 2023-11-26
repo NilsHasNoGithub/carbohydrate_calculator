@@ -311,17 +311,17 @@ class _MealPageState extends State<MealPage> {
 
     mealPartRows
         .add(Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: [
-      TextButton(
+      IconButton(
           onPressed: () => setState(() {
                 currentView = MealViewState.importMealPart;
               }),
-          child: const Text("Importeer deelgerecht")),
-      TextButton(
+          icon: const Icon(Icons.file_upload)),
+      IconButton(
           onPressed: () => setState(() {
                 mealPartViewIdx = currentMes!.parts.length;
                 currentView = MealViewState.mealPart;
               }),
-          child: const Text("Nieuw deelgerecht"))
+          icon: const Icon(Icons.add))
     ]));
 
     //TODO add name and isFavorite
@@ -783,7 +783,6 @@ class _MealPartPageState extends State<MealPartPage> {
         viewState = MealPartViewState.importIngredient;
       }), icon: const Icon(Icons.file_upload));
 
-    //TODO add import button here
     return ListView(
         // mainAxisSize: MainAxisSize.max,
         // mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -791,12 +790,12 @@ class _MealPartPageState extends State<MealPartPage> {
           Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, mainAxisSize: MainAxisSize.max ,children:[heading("Ingredienten"), ingredientImportButton]),
+              heading("Ingredienten"),
               Padding(
                   padding: const EdgeInsets.all(inputFieldPadding),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
-                    children: ingredientRows,
+                    children: ingredientRows + [ingredientImportButton],
                   )),
             ],
           ),

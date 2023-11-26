@@ -26,7 +26,7 @@ class _IngredientPickerViewState extends State<IngredientPickerView> {
         onPressed: () => widget.onPick(ingredient),
         child: Row(
           children: [
-            expandedWithPadding(child: textView(ingredient.name ?? "-")),
+            expandedWithPadding(child: textView(ingredient.name ?? "-", textAlign: TextAlign.center)),
             expandedWithPadding(
                 child: Row(
               mainAxisAlignment: MainAxisAlignment.center,

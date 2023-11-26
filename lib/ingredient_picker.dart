@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:carbohydrate_calculator/app_state.dart';
 import 'package:carbohydrate_calculator/data.dart';
 import 'package:carbohydrate_calculator/utils.dart';
@@ -26,7 +24,9 @@ class _IngredientPickerViewState extends State<IngredientPickerView> {
         onPressed: () => widget.onPick(ingredient),
         child: Row(
           children: [
-            expandedWithPadding(child: textView(ingredient.name ?? "-", textAlign: TextAlign.center)),
+            expandedWithPadding(
+                child: textView(ingredient.name ?? "-",
+                    textAlign: TextAlign.center)),
             expandedWithPadding(
                 child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -47,38 +47,48 @@ class _IngredientPickerViewState extends State<IngredientPickerView> {
         appState.meals.values
             .expand((element) => element.parts)
             .expand((element) => element.ingredients)
-            .where((element) => element.chPerGram != null && element.name != null)
-            .where((element) => (element.name!.toLowerCase()).contains(filter.toLowerCase())),
+            .where(
+                (element) => element.chPerGram != null && element.name != null)
+            .where((element) =>
+                (element.name!.toLowerCase()).contains(filter.toLowerCase())),
         (elem) => (elem.name, elem.chPerGram));
 
-    ingredients.sort((i1, i2) => (i1.name!.toLowerCase()).compareTo(i2.name!.toLowerCase()));
+    ingredients.sort(
+        (i1, i2) => i1.name!.toLowerCase().compareTo(i2.name!.toLowerCase()));
 
     List<Widget> ingredientRows = [];
 
-    for (var(idx, ingredient) in ingredients.indexed) {
-      ingredientRows.add((
-        Container(
-          color: idx % 2 == 0 ? Theme.of(context).hoverColor : null,
-          child: buildIngredientRow(context, appState, ingredient),
-        )
-      ));
+    for (var (idx, ingredient) in ingredients.indexed) {
+      ingredientRows.add((Container(
+        color: idx % 2 == 0 ? Theme.of(context).hoverColor : null,
+        child: buildIngredientRow(context, appState, ingredient),
+      )));
     }
 
-    Widget filterContainer = padding(child: FilterContainer(onFilterChange: (newValue) => setState(() {
-        filter=newValue;
-    }), onFavoritesOnlyChange: null));
+    Widget filterContainer = padding(
+        child: FilterContainer(
+            onFilterChange: (newValue) => setState(() {
+                  filter = newValue;
+                }),
+            onFavoritesOnlyChange: null));
 
-    Widget backButton = padding(child: TextButton(onPressed: widget.onBack, child: textView("Terug")));
+    Widget backButton = padding(
+        child: TextButton(onPressed: widget.onBack, child: textView("Terug")));
 
-    //TODO add filter, add backButton
-
-    return PopScope(canPop: false, onPopInvoked: (value) {
-      widget.onBack();
-
-    },child: Column(children: [
-      filterContainer,
-      Expanded(child: ListView(children: ingredientRows,)),
-      backButton
-    ],));
+    return PopScope(
+        canPop: false,
+        onPopInvoked: (value) {
+          widget.onBack();
+        },
+        child: Column(
+          children: [
+            filterContainer,
+            Expanded(
+                child: ListView(
+              children: ingredientRows,
+            )),
+            backButton
+          ],
+        ));
   }
 }

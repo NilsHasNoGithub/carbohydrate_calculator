@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:carbohydrate_calculator/utils.dart';
 import 'package:flutter/foundation.dart';

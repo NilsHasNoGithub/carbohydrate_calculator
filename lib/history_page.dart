@@ -73,7 +73,7 @@ class _HistoryViewState extends State<HistoryView> {
       mealRows.add(buildMealRow(context, appState, m, i));
     }
 
-    List<Widget> filter_container = appState.mealsSortedByDate.isEmpty
+    List<Widget> filterContainer = appState.mealsSortedByDate.isEmpty
         ? []
         : [
             FilterContainer(
@@ -89,7 +89,7 @@ class _HistoryViewState extends State<HistoryView> {
 
     // TODO: implement build
     return Column(
-        children: filter_container +
+        children: filterContainer +
             [
               Row(
                 children: [

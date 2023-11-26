@@ -571,7 +571,6 @@ class MealPartPage extends StatefulWidget {
 class _MealPartPageState extends State<MealPartPage> {
   MealPartViewState viewState = MealPartViewState.mealPart;
 
-
   Ingredient getOrAddIngredient(int index) {
     while (index >= widget.currentlyEditing.ingredients.length) {
       widget.currentlyEditing.ingredients.add(Ingredient.empty());
@@ -779,9 +778,11 @@ class _MealPartPageState extends State<MealPartPage> {
           ],
         ));
 
-      Widget ingredientImportButton = IconButton(onPressed: () => setState(() {
-        viewState = MealPartViewState.importIngredient;
-      }), icon: const Icon(Icons.file_upload));
+    Widget ingredientImportButton = IconButton(
+        onPressed: () => setState(() {
+              viewState = MealPartViewState.importIngredient;
+            }),
+        icon: const Icon(Icons.file_upload));
 
     return ListView(
         // mainAxisSize: MainAxisSize.max,
@@ -853,15 +854,16 @@ class _MealPartPageState extends State<MealPartPage> {
     if (viewState == MealPartViewState.mealPart) {
       return buildMealPartView(context, appState);
     } else {
-      return IngredientPickerView(onBack: () => setState(() {
-        viewState = MealPartViewState.mealPart;
-      }), onPick: (ingredient) => setState(() {
-        widget.currentlyEditing.ingredients.add(ingredient);
-        widget.onChange(widget.currentlyEditing);
-        viewState = MealPartViewState.mealPart;
-      }));
+      return IngredientPickerView(
+          onBack: () => setState(() {
+                viewState = MealPartViewState.mealPart;
+              }),
+          onPick: (ingredient) => setState(() {
+                widget.currentlyEditing.ingredients.add(ingredient);
+                widget.onChange(widget.currentlyEditing);
+                viewState = MealPartViewState.mealPart;
+              }));
     }
-
   }
 }
 

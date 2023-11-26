@@ -10,7 +10,7 @@ class MealPartPicker extends StatefulWidget {
   final void Function(MealPart) onPick;
   final void Function() onBack;
 
-  MealPartPicker({super.key, required this.onPick, required this.onBack});
+  const MealPartPicker({super.key, required this.onPick, required this.onBack});
 
   @override
   State<MealPartPicker> createState() => _MealPartPickerState();

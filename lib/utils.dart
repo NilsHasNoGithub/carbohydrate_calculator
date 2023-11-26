@@ -205,7 +205,7 @@ class FilterContainer extends StatefulWidget {
   final void Function(String) onFilterChange;
   final void Function(bool)? onFavoritesOnlyChange;
 
-  FilterContainer(
+  const FilterContainer(
       {super.key,
       required this.onFilterChange,
       required this.onFavoritesOnlyChange});
@@ -232,8 +232,6 @@ class _FilterContainerState extends State<FilterContainer> {
           border: UnderlineInputBorder(), labelText: "Filter"),
     );
 
-    
-
     if (widget.onFavoritesOnlyChange == null) {
       return filterField;
     }
@@ -253,7 +251,10 @@ class _FilterContainerState extends State<FilterContainer> {
                     }))));
 
     return Row(
-      children: [expandedWithPadding(child: filterField), favoritesFilterButton],
+      children: [
+        expandedWithPadding(child: filterField),
+        favoritesFilterButton
+      ],
     );
   }
 }

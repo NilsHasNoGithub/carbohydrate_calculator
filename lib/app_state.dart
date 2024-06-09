@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:carbohydrate_calculator/data.dart';
 import 'package:carbohydrate_calculator/utils.dart';
 import 'package:flutter/material.dart';
+import 'package:logger/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 const mealSettingPrefix = "meal-";
@@ -158,11 +159,15 @@ class AppState extends ChangeNotifier {
     for (final k in prefs.getKeys()) {
       id() => k.split("-")[1];
 
-      if (k.startsWith(mealSettingPrefix)) {
-        meals[id()] = Meal.fromJson(jsonDecode(prefs.getString(k)!));
-      } else if (k.startsWith(mealCalcStateSettingPrefix)) {
-        calculationStates[id()] =
-            ChCalculationState.fromJson(jsonDecode(prefs.getString(k)!));
+      try {
+        if (k.startsWith(mealSettingPrefix)) {
+          meals[id()] = Meal.fromJson(jsonDecode(prefs.getString(k)!));
+        } else if (k.startsWith(mealCalcStateSettingPrefix)) {
+          calculationStates[id()] =
+              ChCalculationState.fromJson(jsonDecode(prefs.getString(k)!));
+        }
+      } catch (e) {
+        Logger().e("Error loading $k: $e");
       }
     }
 
@@ -170,9 +175,13 @@ class AppState extends ChangeNotifier {
     var mesJsonString = prefs.getString(mealEditStateKey);
 
     if (mesJsonString != null) {
-      var json = jsonDecode(mesJsonString);
-      mealEditState = MealEditState.fromJson(json);
-      viewState = ViewState.mealView;
+      try {
+        var json = jsonDecode(mesJsonString);
+        mealEditState = MealEditState.fromJson(json);
+        viewState = ViewState.mealView;
+      } catch (e) {
+        Logger().e("Error loading mealEditState: $e");
+      }
     }
 
     // Finalize

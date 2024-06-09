@@ -190,7 +190,12 @@ class MealPart {
       totalIngChs.add(ing.totalCarbohydrates);
     }
 
+    if (totalIngChs.isEmpty) {
+      return null;
+    }
+
     double totalCh = totalIngChs.reduce((value, element) => value + element);
+
     return (totalCh / contentWeight);
   }
 

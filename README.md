@@ -1,2 +1,2 @@
 # carbohydrate_calculator
-App om koolhydraten van maaltijden eenboudig te berekenen
+App om koolhydraten van maaltijden eenvoudig te berekenen

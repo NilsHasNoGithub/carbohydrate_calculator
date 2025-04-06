@@ -459,18 +459,50 @@ class ChCalculationState {
   Map<String, dynamic> toJson() => _$ChCalculationStateToJson(this);
 
   void removePartsByIdx(List<int> removedPartIdxs) {
-    List<int> toRemoveLocal = [];
+    if (removedPartIdxs.isEmpty) return; // Nothing to do
 
+    List<int> toRemoveLocal = [];
+    Set<int> removedSet = Set.from(removedPartIdxs); // Efficient lookup
+
+    // Find local indices corresponding to removed meal part indices
     for (var localIdx = 0; localIdx < mealPartIdxs.length; localIdx++) {
-      if (removedPartIdxs.contains(mealPartIdxs[localIdx])) {
+      if (removedSet.contains(mealPartIdxs[localIdx])) {
         toRemoveLocal.add(localIdx);
       }
     }
 
-    for (var localIdx in toRemoveLocal.reversed) {
-      mealPartIdxs.removeAt(localIdx);
-      weights.removeAt(localIdx);
-      partsRemoved = true;
+    // Remove the identified local entries
+    if (toRemoveLocal.isNotEmpty) {
+      partsRemoved = true; // Flag that parts were removed
+      for (var localIdx in toRemoveLocal.reversed) {
+        mealPartIdxs.removeAt(localIdx);
+        weights.removeAt(localIdx);
+      }
+    }
+
+    // --- Adjust remaining indices ---
+    // Sort the removed indices to easily count how many were before a given index
+    removedPartIdxs.sort();
+
+    for (var localIdx = 0; localIdx < mealPartIdxs.length; localIdx++) {
+      var currentPartIdx = mealPartIdxs[localIdx];
+      if (currentPartIdx == null) continue; // Skip null indices
+
+      // Count how many removed parts came *before* this part's original index
+      int shiftCount = 0;
+      for (var removedIdx in removedPartIdxs) {
+        if (removedIdx < currentPartIdx) {
+          shiftCount++;
+        } else {
+          // Since removedPartIdxs is sorted, we can stop early
+          break;
+        }
+      }
+
+      // Apply the shift
+      if (shiftCount > 0) {
+        mealPartIdxs[localIdx] = currentPartIdx - shiftCount;
+      }
     }
   }
 

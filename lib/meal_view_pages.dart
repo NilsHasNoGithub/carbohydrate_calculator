@@ -887,7 +887,7 @@ class _CalculatorPageState extends State<CalculatorPage> {
     for (var partIdx in allowedPartIdxs) {
       var part = widget.meal.parts[partIdx];
       dropDownLabels.add(
-          "${part.name} (${optFormatFloat(part.totalChPer100G())} Kh. /100g)");
+          "${part.name} (${optFormatFloat(part.totalChPer100G(), defaultVal: "?")} Kh. /100g)");
     }
 
     Widget dropDownMenu = expandedWithPadding(
@@ -957,10 +957,17 @@ class _CalculatorPageState extends State<CalculatorPage> {
       calcState.addEmpty();
     }
 
+    // List<int> partIdxCandidates = List.generate(widget.meal.parts.length, (i) => i);
     List<int> partIdxCandidates = [];
 
+    // Get the indices already used in the current calculation state
+    Set<int?> usedIndices = Set.from(calcState.mealPartIdxs);
+
     for (var (i, part) in widget.meal.parts.indexed) {
-      if (part.totalChPerG() != null) partIdxCandidates.add(i);
+      // Include if CH/g is known OR if it's already part of the current calculation
+      if (part.totalChPerG() != null || usedIndices.contains(i)) {
+        partIdxCandidates.add(i);
+      }
     }
 
     // var partIdxCandidates = widget.meal.parts.indexed
@@ -1002,7 +1009,8 @@ class _CalculatorPageState extends State<CalculatorPage> {
                 )),
         child: textView("Reset"));
 
-    var totalCh = calcState.totalCarbohydratesG(widget.meal);
+    var totalCh =
+        calcState.totalCarbohydratesG(widget.meal, skipIncompleteParts: true);
 
     // TODO: implement build
     return Column(

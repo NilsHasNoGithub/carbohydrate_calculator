@@ -360,9 +360,30 @@ class MealEditState {
 class ChCalculationState {
   List<int?> mealPartIdxs = [];
   List<double?> weights = [];
+  double divisor = 1.0; // Added divisor field
   bool partsRemoved = false;
 
-  ChCalculationState();
+  ChCalculationState({
+    this.mealPartIdxs = const [],
+    this.weights = const [],
+    this.divisor = 1.0, // Default value for divisor
+    this.partsRemoved = false,
+  });
+
+  @override
+  bool operator ==(Object other) {
+    bool? baseEq = _baseEqual(this, other);
+    if (baseEq != null) return baseEq;
+    var o = other as ChCalculationState;
+    return listEquals(mealPartIdxs, o.mealPartIdxs) &&
+        listEquals(weights, o.weights) &&
+        divisor == o.divisor && // Added divisor comparison
+        partsRemoved == o.partsRemoved;
+  }
+
+  @override
+  int get hashCode => hash4(Object.hashAll(mealPartIdxs),
+      Object.hashAll(weights), divisor, partsRemoved); // Added divisor to hash
 
   bool get isEmpty {
     assert(mealPartIdxs.isEmpty == weights.isEmpty);

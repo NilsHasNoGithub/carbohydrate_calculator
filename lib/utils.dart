@@ -42,10 +42,11 @@ Widget inputField(
     void Function()? onTap,
     void Function()? onFocusLoss,
     double fontSize = defaultFontSize,
+    bool setSelectionOnValue = true,
     bool readOnly = false}) {
   var controller = TextEditingController(text: value);
 
-  if (value != null) {
+  if (value != null && setSelectionOnValue) {
     controller.selection =
         TextSelection(baseOffset: 0, extentOffset: value.length);
   }

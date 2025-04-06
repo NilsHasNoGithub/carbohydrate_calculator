@@ -880,6 +880,14 @@ class CalculatorPage extends StatefulWidget {
 class _CalculatorPageState extends State<CalculatorPage> {
   ChCalculationState calcState = ChCalculationState();
 
+  @override
+  void dispose() {
+    // No controller to dispose anymore
+    super.dispose();
+  }
+
+  // Removed initState, _loadDivisor, _saveDivisor as they are handled differently now
+
   Widget buildMealPartCalcRow(BuildContext context, AppState appState,
       List<int> allowedPartIdxs, int calcStateIdx) {
     List<String> dropDownLabels = [];
@@ -1012,6 +1020,36 @@ class _CalculatorPageState extends State<CalculatorPage> {
     var totalCh =
         calcState.totalCarbohydratesG(widget.meal, skipIncompleteParts: true);
 
+    // Initialize controller text if needed (e.g., when state is first loaded)
+    // Ensure this happens after calcState is potentially updated from appState
+    final currentDivisorValue = calcState.divisor ?? 1.0;
+    final currentDivisorText = optFormatFloat(currentDivisorValue) ?? "1.0";
+    // Initialize _divisorInputText if it's empty or doesn't match the state
+
+    // Calculate divided value
+    final divisorValue =
+        (calcState.divisor ?? 1.0) > 0 ? (calcState.divisor ?? 1.0) : 1.0;
+    final dividedTotalCh = totalCh / divisorValue;
+
+    print(calcState.divisor);
+
+    // Divisor Input Row
+    Widget divisorInputField = inputField(
+      value: currentDivisorText,
+      labelText: "",
+      type: InputFieldType.number,
+      fontSize: defaultFontSize * 1.3,
+      onChanged: (newValue) {
+        final parsed = double.tryParse(newValue);
+        if (parsed != null && parsed > 0) {
+          calcState.divisor = parsed;
+        }
+      },
+      onFocusLoss: () {
+        appState.saveCalcStateOf(widget.meal.id, calcState);
+      },
+    );
+
     // TODO: implement build
     return Column(
       children: [
@@ -1027,9 +1065,32 @@ class _CalculatorPageState extends State<CalculatorPage> {
             child: ListView(
           children: calcRows,
         )),
-        padding(
-            child: heading(
-                "Totaal g. Koolhydraten: ${optFormatFloat(totalCh, defaultVal: "?")}")),
+        Column(
+          children: [
+            padding(
+                child: heading(
+              "Totaal g. Koolhydraten: ${optFormatFloat(totalCh, defaultVal: "?")}",
+            )),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+
+              // Wrap totals in a Column
+              children: [
+                padding(child: heading("/")),
+                padding(
+                    child: SizedBox(
+                        width: 50, // Adjust width as needed
+                        child: divisorInputField)), // Add divisor input row
+                padding(child: heading("=")),
+                padding(
+                    // Add display for divided total
+                    child: heading(
+                        optFormatFloat(dividedTotalCh, defaultVal: "?"))),
+              ],
+            ),
+          ],
+        ),
+
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [backButton, resetButton]

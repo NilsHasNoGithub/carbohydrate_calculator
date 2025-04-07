@@ -88,18 +88,15 @@ Map<String, dynamic> _$MealEditStateToJson(MealEditState instance) =>
     };
 
 ChCalculationState _$ChCalculationStateFromJson(Map<String, dynamic> json) =>
-    ChCalculationState(
-      mealPartIdxs: (json['mealPartIdxs'] as List<dynamic>?)
-              ?.map((e) => (e as num?)?.toInt())
-              .toList() ??
-          const [],
-      weights: (json['weights'] as List<dynamic>?)
-              ?.map((e) => (e as num?)?.toDouble())
-              .toList() ??
-          const [],
-      divisor: (json['divisor'] as num?)?.toDouble() ?? 1.0,
-      partsRemoved: json['partsRemoved'] as bool? ?? false,
-    );
+    ChCalculationState()
+      ..mealPartIdxs = (json['mealPartIdxs'] as List<dynamic>)
+          .map((e) => (e as num?)?.toInt())
+          .toList()
+      ..weights = (json['weights'] as List<dynamic>)
+          .map((e) => (e as num?)?.toDouble())
+          .toList()
+      ..divisor = (json['divisor'] as num).toDouble()
+      ..partsRemoved = json['partsRemoved'] as bool;
 
 Map<String, dynamic> _$ChCalculationStateToJson(ChCalculationState instance) =>
     <String, dynamic>{

@@ -363,12 +363,7 @@ class ChCalculationState {
   double divisor = 1.0; // Added divisor field
   bool partsRemoved = false;
 
-  ChCalculationState({
-    this.mealPartIdxs = const [],
-    this.weights = const [],
-    this.divisor = 1.0, // Default value for divisor
-    this.partsRemoved = false,
-  });
+  ChCalculationState();
 
   @override
   bool operator ==(Object other) {
